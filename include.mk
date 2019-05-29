@@ -45,7 +45,9 @@ export STACK_LOCAL_HPC_ROOT  # so that sub-makes do not invoke stack again
 KORE_EXEC = $(STACK_LOCAL_INSTALL_ROOT)/bin/kore-exec
 KORE_EXEC_OPTS =
 
+# TODO: wip
 KORE_REPL = $(STACK_LOCAL_INSTALL_ROOT)/bin/kore-repl
+KORE_REPL_OPTS =
 
 $(KORE_EXEC):
 	$(STACK) $(STACK_BUILD) $(STACK_NO_PROFILE) kore:exe:kore-exec

@@ -11,3 +11,8 @@ kscript_tests := \
 test-prove: $(foreach test, $(prove_tests), prove/$(test).kprove)
 
 # test-kscript: $(foreach test, $(kscript_tests), repl-tests/$(test).kscript)
+
+clean:
+	rm -rf $(KOMPILED) tests/*.output
+
+.PHONY: test-k test golden clean %.test %.krun

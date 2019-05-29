@@ -47,10 +47,20 @@ $(DEFINITION) : $(DEFINITION_NAME).k
 %.output: %.$(DEFINITION_NAME) $(DEFINITION) $(KORE_EXEC)
 	$(KRUN) $(KRUN_OPTS) $< --output-file $@
 
+# TODO: wip
+%.kscript_output: %.$(DEFINITION_NAME) $(DEFINITION) $(KORE_REPL)
+	$(KORE_REPL)  
+
 %.test: %.output
 	diff -u $<.golden $<
 
 %.output.golden: %.output
+	mv $< $<.golden
+
+%.kscript: %.kscript_output
+	diff -u $<.golden $<
+
+%.kscript_output.golden: %kscript_output
 	mv $< $<.golden
 
 .PHONY: test-k test golden clean %.test %.krun
