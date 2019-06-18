@@ -336,8 +336,6 @@ fromSentenceAxiom sentenceAxiom = do
             (Syntax.sentenceAxiomAttributes sentenceAxiom)
     patternToAxiomPattern attributes (Syntax.sentenceAxiomPattern sentenceAxiom)
 
--- TODO(ana.pantilie): should apply `weakExistsFinally` to the
--- second mkAnd when the frontend will be able to unparse one path claims
 onePathRuleToPattern
     :: Ord variable
     => SortedVariable variable
@@ -350,10 +348,16 @@ onePathRuleToPattern (OnePathRule rulePatt) =
             (Predicate.unwrapPredicate . requires $ rulePatt)
             (left rulePatt)
         )
-        ( mkAnd
-            (Predicate.unwrapPredicate . ensures $ rulePatt)
-            (right rulePatt)
+        ( mkApplyAlias
+            (termLikeSort . left $ rulePatt)
+            op
+            [( mkAnd
+                (Predicate.unwrapPredicate . ensures $ rulePatt)
+                (right rulePatt)
+             )]
         )
+  where
+    op = Alias (Id weakExistsFinally AstLocationNone) []
 
 {- | Match a pure pattern encoding an 'QualifiedAxiomPattern'.
 
