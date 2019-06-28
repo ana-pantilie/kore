@@ -1,6 +1,6 @@
 require "../../lib/state.k"
 
-module IMP-SYNTAX
+module IMP-KORE-SYNTAX
   imports DOMAINS-SYNTAX
   syntax AExp  ::= Int | Id
                  | "-" Int
@@ -25,7 +25,7 @@ module IMP-SYNTAX
 endmodule
 
 module IMP-STATE
-  imports IMP-SYNTAX
+  imports IMP-KORE-SYNTAX
   imports STATE
 
   syntax StateKey ::= Id
@@ -33,10 +33,18 @@ module IMP-STATE
 
 endmodule
 
+module SYMBOLIC-INT-SYNTAX
+  imports IMP-KORE-SYNTAX
+  syntax AExp ::= "symInt"
+endmodule
+
+module IMP-SYNTAX
+  imports IMP-KORE-SYNTAX
+  imports SYMBOLIC-INT-SYNTAX
+endmodule
 
 module SYMBOLIC-INT
-  imports IMP-SYNTAX
-  syntax AExp ::= "symInt"
+  imports SYMBOLIC-INT-SYNTAX
   rule symInt => ?I:Int
 endmodule
 
