@@ -81,7 +81,7 @@ import           Kore.Internal.OrPattern
                  ( OrPattern )
 import qualified Kore.Internal.OrPattern as OrPattern
 import           Kore.Internal.Pattern
-                 ( Pattern, Predicate )
+                 ( Pattern (..), Predicate )
 import qualified Kore.Internal.Predicate as Predicate
 import           Kore.Internal.TermLike
                  ( Symbol, TermLike, TermLikeF (..) )
@@ -430,7 +430,7 @@ newtype TermLikeSimplifier =
 emptyTermLikeSimplifier :: TermLikeSimplifier
 emptyTermLikeSimplifier =
     TermLikeSimplifier $ \term condition ->
-        return (Conditional.withCondition term condition)
+        return (Pattern $ Conditional.withCondition term condition)
 
 {- | Use a 'TermLikeSimplifier' to simplify a pattern.
 
@@ -512,7 +512,7 @@ termLikeSimplifier simplifier =
       = do
         results <- Monad.Trans.lift $ simplifier termLike
         result <- scatter results
-        return (result `Conditional.andCondition` initialCondition)
+        return $ Pattern (unPattern result `Conditional.andCondition` initialCondition)
 
 {-| 'PredicateSimplifier' wraps a function that simplifies
 'Predicate's. The minimal requirement from this function is

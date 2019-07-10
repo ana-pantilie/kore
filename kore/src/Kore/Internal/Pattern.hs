@@ -5,7 +5,7 @@ License     : NCSA
 Representation of program configurations as conditional patterns.
 -}
 module Kore.Internal.Pattern
-    ( Pattern
+    ( Pattern (..)
     , fromPredicate
     , fromPredicateSorted
     , toPredicate
@@ -27,6 +27,11 @@ module Kore.Internal.Pattern
     , Predicate
     ) where
 
+import Control.DeepSeq
+       ( NFData )
+import Data.Hashable
+import GHC.Generics
+       ( Generic )
 import GHC.Stack
        ( HasCallStack )
 
@@ -52,26 +57,36 @@ The form of @Pattern@ is intended to be a convenient representation of a
 program configuration for Kore execution.
 
  -}
-type Pattern variable = Conditional variable (TermLike variable)
+newtype Pattern variable =
+        Pattern
+        { unPattern
+            :: Conditional variable (TermLike variable)
+        } deriving
+            ( Eq, Ord, Show
+            , Hashable, NFData
+            , Generic
+            , TopBottom
+            )
 
 fromPredicate
     :: (Ord variable, SortedVariable variable)
     => Predicate variable
     -> Pattern variable
-fromPredicate = (<$) mkTop_
+fromPredicate = Pattern . (<$) mkTop_
 
 fromPredicateSorted
     :: (Ord variable, SortedVariable variable)
     => Sort
     -> Predicate variable
     -> Pattern variable
-fromPredicateSorted sort = (<$) (mkTop sort)
+fromPredicateSorted sort = Pattern . (<$) (mkTop sort)
 
 freeVariables
     :: Ord variable
     => Pattern variable
     -> FreeVariables variable
-freeVariables = Conditional.freeVariables TermLike.freeVariables
+freeVariables =
+    Conditional.freeVariables TermLike.freeVariables . unPattern
 
 {-|'mapVariables' transforms all variables, including the quantified ones,
 in an Pattern.
@@ -83,13 +98,22 @@ mapVariables
     -> Pattern variableTo
 mapVariables
     variableMapper
-    Conditional { term, predicate, substitution }
+    (Pattern (Conditional { term, predicate, substitution }))
   =
-    Conditional
-        { term = TermLike.mapVariables variableMapper term
-        , predicate = Syntax.Predicate.mapVariables variableMapper predicate
+    Pattern
+    $ Conditional
+        { term =
+            TermLike.mapVariables
+                variableMapper
+                term
+        , predicate =
+            Syntax.Predicate.mapVariables
+                variableMapper
+                predicate
         , substitution =
-            Substitution.mapVariables variableMapper substitution
+            Substitution.mapVariables
+                variableMapper
+                substitution
         }
 
 {- | Convert an 'Pattern' to an ordinary 'TermLike'.
@@ -109,7 +133,9 @@ toTermLike
         , HasCallStack
         )
     => Pattern variable -> TermLike variable
-toTermLike Conditional { term, predicate, substitution } =
+toTermLike
+    (Pattern (Conditional { term, predicate, substitution }))
+  =
     simpleAnd
         (simpleAnd term predicate)
         (Syntax.Predicate.fromSubstitution substitution)
@@ -132,9 +158,12 @@ toTermLike Conditional { term, predicate, substitution } =
 {-|'bottom' is an expanded pattern that has a bottom condition and that
 should become Bottom when transformed to a ML pattern.
 -}
-bottom :: (Ord variable, SortedVariable variable) => Pattern variable
+bottom
+    :: (Ord variable, SortedVariable variable)
+    => Pattern variable
 bottom =
-    Conditional
+    Pattern
+    $ Conditional
         { term      = mkBottom_
         , predicate = Syntax.Predicate.makeFalsePredicate
         , substitution = mempty
@@ -147,7 +176,8 @@ The 'predicate' is set to 'makeFalsePredicate'.
  -}
 bottomOf :: (Ord variable, SortedVariable variable) => Sort -> Pattern variable
 bottomOf resultSort =
-    Conditional
+    Pattern
+    $ Conditional
         { term      = mkBottom resultSort
         , predicate = Syntax.Predicate.makeFalsePredicate
         , substitution = mempty
@@ -158,7 +188,8 @@ should become Top when transformed to a ML pattern.
 -}
 top :: (Ord variable, SortedVariable variable) => Pattern variable
 top =
-    Conditional
+    Pattern
+    $ Conditional
         { term      = mkTop_
         , predicate = Syntax.Predicate.makeTruePredicate
         , substitution = mempty
@@ -168,7 +199,8 @@ top =
  -}
 topOf :: (Ord variable, SortedVariable variable) => Sort -> Pattern variable
 topOf resultSort =
-    Conditional
+    Pattern
+    $ Conditional
         { term      = mkTop resultSort
         , predicate = Syntax.Predicate.makeTruePredicate
         , substitution = mempty
@@ -189,11 +221,12 @@ fromTermLike
 fromTermLike term
   | isBottom term = bottom
   | otherwise =
-    Conditional
-        { term
-        , predicate = Syntax.Predicate.makeTruePredicate
-        , substitution = mempty
-        }
+      Pattern
+      $ Conditional
+          { term
+          , predicate = Syntax.Predicate.makeTruePredicate
+          , substitution = mempty
+          }
 
 toPredicate
     ::  ( SortedVariable variable
@@ -203,7 +236,7 @@ toPredicate
         )
     => Pattern variable
     -> Syntax.Predicate variable
-toPredicate = Conditional.toPredicate
+toPredicate = Conditional.toPredicate . unPattern
 
 splitTerm :: Pattern variable -> (TermLike variable, Predicate variable)
-splitTerm = Conditional.splitTerm
+splitTerm = Conditional.splitTerm . unPattern

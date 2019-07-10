@@ -1171,15 +1171,14 @@ instance
         s2Inner = Substitution.unwrap s2
 
 instance
-    ( Show variable, Show child , Ord variable
+    ( Show variable, Ord variable
     , EqualWithExplanation variable
-    , EqualWithExplanation child
     , EqualWithExplanation (TermLike variable)
     )
-    => StructEqualWithExplanation (Conditional variable child)
+    => StructEqualWithExplanation (Pattern variable)
   where
     structFieldsWithNames
-        expected@(Conditional _ _ _) actual@(Conditional _ _ _)
+        expected actual
       =
         [ EqWrap
             "term = "
@@ -1194,15 +1193,14 @@ instance
             (substitution expected)
             (substitution actual)
         ]
-    structConstructorName _ = "Conditional"
+    structConstructorName _ = "Pattern"
 
 instance
-    ( Show variable, Show child , Ord variable
+    ( Show variable, Ord variable
     , EqualWithExplanation variable
-    , EqualWithExplanation child
     , EqualWithExplanation (TermLike variable)
     )
-    => EqualWithExplanation (Conditional variable child)
+    => EqualWithExplanation (Pattern variable)
   where
     compareWithExplanation = structCompareWithExplanation
     printWithExplanation = show
