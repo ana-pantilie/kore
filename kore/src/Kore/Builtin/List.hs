@@ -73,7 +73,7 @@ import           Kore.IndexedModule.IndexedModule
 import           Kore.IndexedModule.MetadataTools
                  ( SmtMetadataTools )
 import           Kore.Internal.Pattern
-                 ( Conditional (..), Pattern )
+                 ( Conditional (..), Pattern (..) )
 import qualified Kore.Internal.Pattern as Pattern
 import           Kore.Internal.TermLike
 import           Kore.Step.Simplification.Data as Simplifier
@@ -467,9 +467,9 @@ unifyEquals
         Reflection.give tools $ do
             unified <- sequence $ Seq.zipWith simplifyChild list1 list2
             let
-                propagatedUnified = propagatePredicates unified
+                propagatedUnified = propagatePredicates $ unPattern <$> unified
                 result = asInternal tools builtinListSort <$> propagatedUnified
-            return result
+            return . Pattern $ result
       where
         Domain.InternalList { builtinListSort } = builtin1
         Domain.InternalList { builtinListChild = list1 } = builtin1
@@ -493,9 +493,10 @@ unifyEquals
                     builtin2
             suffixUnified <- simplifyChild frame2 listSuffix1
             let result =
-                    pure (mkBuiltin internal1)
-                    <* prefixUnified
-                    <* suffixUnified
+                    Pattern
+                    $ (pure $ mkBuiltin internal1)
+                    <* unPattern prefixUnified
+                    <* unPattern suffixUnified
             return result
       where
         internal1 = Domain.BuiltinList builtin1
@@ -526,9 +527,9 @@ unifyEquals
                     builtin2
             let result =
                     pure (mkBuiltin internal1)
-                    <* prefixUnified
-                    <* suffixUnified
-            return result
+                    <* unPattern prefixUnified
+                    <* unPattern suffixUnified
+            return . Pattern $ result
       where
         internal1 = Domain.BuiltinList builtin1
         Domain.InternalList { builtinListSort } = builtin1

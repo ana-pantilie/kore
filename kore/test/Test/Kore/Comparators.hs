@@ -36,6 +36,7 @@ import           Kore.Error
 import           Kore.Internal.MultiOr
 import           Kore.Internal.Pattern
                  ( Conditional (..) )
+import qualified Kore.Internal.Pattern as Pattern
 import           Kore.Internal.TermLike as TermLike
 import           Kore.OnePath.StrategyPattern
                  ( StrategyPattern )
@@ -1175,23 +1176,23 @@ instance
     , EqualWithExplanation variable
     , EqualWithExplanation (TermLike variable)
     )
-    => StructEqualWithExplanation (Pattern variable)
+    => StructEqualWithExplanation (Pattern.Pattern variable)
   where
     structFieldsWithNames
         expected actual
       =
         [ EqWrap
             "term = "
-            (term expected)
-            (term actual)
+            (term . Pattern.unPattern $ expected)
+            (term . Pattern.unPattern $ actual)
         , EqWrap
             "predicate = "
-            (predicate expected)
-            (predicate actual)
+            (predicate . Pattern.unPattern $ expected)
+            (predicate . Pattern.unPattern $ actual)
         , EqWrap
             "substitution = "
-            (substitution expected)
-            (substitution actual)
+            (substitution . Pattern.unPattern $ expected)
+            (substitution . Pattern.unPattern $ actual)
         ]
     structConstructorName _ = "Pattern"
 
@@ -1200,7 +1201,7 @@ instance
     , EqualWithExplanation variable
     , EqualWithExplanation (TermLike variable)
     )
-    => EqualWithExplanation (Pattern variable)
+    => EqualWithExplanation (Pattern.Pattern variable)
   where
     compareWithExplanation = structCompareWithExplanation
     printWithExplanation = show

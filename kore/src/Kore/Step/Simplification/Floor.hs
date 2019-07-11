@@ -98,14 +98,16 @@ makeEvaluateNonBoolFloor
         )
     => Pattern variable
     -> OrPattern variable
-makeEvaluateNonBoolFloor patt@Conditional { term = Top_ _ } =
+makeEvaluateNonBoolFloor patt@(Pattern (Conditional { term = Top_ _ })) =
     OrPattern.fromPattern patt
 -- TODO(virgil): Also evaluate functional patterns to bottom for non-singleton
 -- sorts, and maybe other cases also
 makeEvaluateNonBoolFloor
-    Conditional {term, predicate, substitution}
+    (Pattern (Conditional {term, predicate, substitution}))
   =
-    OrPattern.fromPattern Conditional
+    OrPattern.fromPattern
+    . Pattern
+    $ Conditional
         { term = mkTop_
         , predicate = makeAndPredicate (makeFloorPredicate term) predicate
         , substitution = substitution

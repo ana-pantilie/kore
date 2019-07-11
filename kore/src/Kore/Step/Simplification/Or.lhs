@@ -165,19 +165,19 @@ useful.
 
 \begin{code}
 disjoinPredicates
-    predicated1@Conditional
+    predicated1@(Pattern (Conditional
         { term = term1
         , predicate = predicate1
         , substitution = substitution1
-        }
-    Conditional
+        }))
+    (Pattern (Conditional
         { term = term2
         , predicate = predicate2
         , substitution = substitution2
-        }
+        }))
 
   | term1 == term2 && substitution1 == substitution2 =
-    Just (predicated1 { predicate = makeOrPredicate predicate1 predicate2 })
+    Just . Pattern $ (unPattern predicated1) { predicate = makeOrPredicate predicate1 predicate2 }
   | otherwise =
     Nothing
 \end{code}
@@ -223,16 +223,16 @@ so that
 
 \begin{code}
 topAnnihilates
-    predicated1@Conditional
+    predicated1@(Pattern (Conditional
         { term = term1
         , predicate = predicate1
         , substitution = substitution1
-        }
-    predicated2@Conditional
+        }))
+    predicated2@(Pattern (Conditional
         { term = term2
         , predicate = predicate2
         , substitution = substitution2
-        }
+        }))
 
   -- The 'term's are checked first because checking the equality of predicates
   -- and substitutions could be expensive.

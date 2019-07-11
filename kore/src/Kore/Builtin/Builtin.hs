@@ -112,7 +112,7 @@ import qualified Kore.IndexedModule.Resolvers as IndexedModule
 import           Kore.Internal.ApplicationSorts
 import qualified Kore.Internal.OrPattern as OrPattern
 import           Kore.Internal.Pattern
-                 ( Conditional (..), Pattern )
+                 ( Conditional (..), Pattern (..) )
 import           Kore.Internal.Pattern as Pattern
                  ( top )
 import           Kore.Internal.TermLike as TermLike
@@ -923,6 +923,6 @@ unifyEqualsUnsolved SimplificationType.And a b =
         unified = mkAnd a b
         predicate = makeCeilPredicate unified
     in
-        return (pure unified) { predicate }
+        return . Pattern $ (pure unified) { predicate }
 unifyEqualsUnsolved SimplificationType.Equals a b =
-    return Pattern.top {predicate = makeEqualsPredicate a b}
+    return . Pattern $ (unPattern Pattern.top) {predicate = makeEqualsPredicate a b}

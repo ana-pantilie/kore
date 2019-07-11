@@ -16,6 +16,8 @@ import Kore.Internal.Conditional
 import Kore.Internal.MultiOr as MultiOr
 import Kore.Internal.OrPattern
        ( OrPattern )
+import Kore.Internal.Pattern
+       ( Pattern (..) )
 import Kore.Internal.TermLike
 import Kore.Unparser
 
@@ -33,7 +35,7 @@ simplify
 simplify builtin =
     MultiOr.filterOr $ do
         child <- simplifyDomainValue builtin
-        return (mkDomainValue <$> child)
+        return . Pattern $ (mkDomainValue <$> child)
 
 simplifyDomainValue
     :: ( Ord variable
@@ -45,4 +47,4 @@ simplifyDomainValue
     -> MultiOr (Conditional variable (DomainValue Sort (TermLike variable)))
 simplifyDomainValue _ext = do
     _ext <- sequence _ext
-    return (sequenceA _ext)
+    return (sequenceA $ fmap unPattern _ext)
