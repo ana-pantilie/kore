@@ -16,6 +16,8 @@ module Kore.ASTVerifier.DefinitionVerifier
     , AttributesVerification (..)
     ) where
 
+import Debug.Trace
+
 import           Control.Monad
                  ( foldM )
 import qualified Data.Foldable as Foldable
@@ -127,6 +129,7 @@ verifyAndIndexDefinitionWithBase
         verifiedDefaultModule = ImplicitIndexedModule implicitIndexedModule
 
     -- Verify the contents of the definition.
+    traceM $ "\n\nAll the modules! " <> show (moduleName <$> definitionModules definition) <>"\n\n\n"
     (_, index) <-
         runModuleVerifier
             (Foldable.traverse_

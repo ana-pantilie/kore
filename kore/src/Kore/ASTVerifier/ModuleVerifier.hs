@@ -14,6 +14,8 @@ module Kore.ASTVerifier.ModuleVerifier
     , runModuleVerifier
     ) where
 
+import Debug.Trace
+
 import           Control.Applicative
                  ( Alternative (..) )
 import           Control.Lens
@@ -145,6 +147,7 @@ lookupParsedModule name =
     notFound =
         koreFail ("Module '" ++ getModuleNameForError name ++ "' not found.")
 
+-- TODO(ana): Why is the current module added to its import list?
 whileImporting :: ModuleName -> ModuleVerifier a -> ModuleVerifier a
 whileImporting name locally = do
     ModuleContext { importing } <- Reader.ask
@@ -196,8 +199,14 @@ verifyModuleByName :: ModuleName -> ModuleVerifier VerifiedModule'
 verifyModuleByName name =
     lookupVerifiedModule name >>= maybe notYetIndexed alreadyIndexed
   where
-    alreadyIndexed = return
+    alreadyIndexed x = do
+        traceM "\nAlready verified.\n"
+        return x
     notYetIndexed = whileImporting name $ do
+        ModuleContext { modules = mdls, importing = impts } <- Reader.ask
+        traceM $ "\nCurrent module: " <> show name <> "\n"
+        traceM $ "\nModules in scope: " <> show (Map.keys mdls) <> "\n"
+        traceM $ "\nImported modules: " <> show impts <> "\n"
         module' <- lookupParsedModule name
         let Module { moduleSentences } = module'
             sentences = List.sort moduleSentences
@@ -219,6 +228,9 @@ verifyModuleByName name =
             withModuleContext name
             $ internalIndexedModuleSubsorts indexedModule
         field @"verifiedModules" %= Map.insert name indexedModule
+        ModuleState { verifiedModules = verifmdls } <- State.get
+        traceM $ "\nState keys: " <> show (Map.keys verifmdls) <> "\n"
+        traceM "--------------------------------------------------"
         return indexedModule
 
 verifyImports
@@ -237,7 +249,10 @@ verifyImport verifiedModule sentence =
     withSentenceImportContext sentence $ do
         let SentenceImport { sentenceImportAttributes = attrs0 } = sentence
         attrs1 <- parseAttributes' attrs0
+        traceM "\n**** FROM verifyImport ****\n"
+        traceM $ "Imports module: " <> show (sentenceImportModuleName sentence) <> "\n"
         verified <- verifyModuleByName $ sentenceImportModuleName sentence
+        traceM $ "\n*******" <> show (indexedModuleName verified) <> "******\n"
         return $ addImport verified attrs1 attrs0 verifiedModule
   where
     addImport verified attrs1 attrs0 =
