@@ -20,6 +20,7 @@ import Data.List
     )
 import qualified Data.Text as Text
 import Debug.Trace
+import qualified Kore.Domain.Builtin as Domain
 
 import Control.Error
     ( ExceptT
@@ -111,17 +112,29 @@ evaluateApplication
         & maybeT (return unevaluated) return
         & Trans.lift
     let idSymb = Text.unpack . getId . symbolConstructor $ symbol
-    when ("parseByteStack" `isInfixOf` idSymb)
-        ( traceM
-        $ "Final result: " <> foldr (\a b -> unparseToString a <> " " <> b) "" results
-        )
+    if ("parseByteStack" `isInfixOf` idSymb)
+        then
+            case children of
+                [termDebug] ->
+                    case termDebug of
+                        (Builtin_ (Domain.BuiltinString str)) ->
+                            when (Domain.internalStringValue str == "do")
+                              $ traceM
+                                  $ "\nTerm to be evaluated: "
+                                  <> unparseToString termLike
+                                  <> "\nFinal result: "
+                                  <> foldr (\a b -> unparseToString a <> " " <> b) "" results
+                                  <> "\nLength: " <> show (length results)
+                        _ -> return ()
+                _ -> return ()
+        else return ()
     Foldable.for_ canMemoize (recordOrPattern results)
     return results
   where
     finishT :: ExceptT r simplifier r -> simplifier r
     finishT = exceptT return return
 
-    Application { applicationSymbolOrAlias = symbol } = application
+    Application { applicationSymbolOrAlias = symbol, applicationChildren = children } = application
 
     termLike = synthesize (ApplySymbolF application)
     unevaluated =
@@ -238,14 +251,14 @@ maybeEvaluatePattern
                             identifier (length orResults)
                         $ mapM simplifyIfNeeded orResults
                     let simplifiedResult = MultiOr.flatten simplified
-                    case termLike of
-                        App_ symbol _ -> do
-                            let idSymb = Text.unpack . getId . symbolConstructor $ symbol
-                            when ("parseByteStack" `isInfixOf` idSymb)
-                                ( traceM
-                                    $ "\nResimplify result: " <> foldr (\a b -> unparseToString a <> " " <> b) "" simplifiedResult
-                                )
-                        _ -> return ()
+                    -- case termLike of
+                    --     App_ symbol _ -> do
+                    --         let idSymb = Text.unpack . getId . symbolConstructor $ symbol
+                    --         when ("parseByteStack" `isInfixOf` idSymb)
+                    --             ( traceM
+                    --                 $ "\nResimplify result: " <> foldr (\a b -> unparseToString a <> " " <> b) "" simplifiedResult
+                    --             )
+                    --     _ -> return ()
                     Profile.axiomBranching
                         identifier
                         (length orResults)
@@ -266,34 +279,34 @@ maybeEvaluatePattern
                 return defaultValue
             AttemptedAxiom.Applied attemptResults -> do
                 let x = MultiOr.merge results remainders
-                case termLike of
-                    App_ symbol _ -> do
-                        let idSymb = Text.unpack . getId . symbolConstructor $ symbol
-                        when ("parseByteStack" `isInfixOf` idSymb)
-                            ( traceM
-                                $ "\nAxiomIdentifier: " <> show identifier
-                                <> "\nTermlike: " <> unparseToString termLike
-                                <> "\nResult: "
-                                    <> case result of
-                                           AttemptedAxiom.NotApplicable -> show result
-                                           AttemptedAxiom.Applied (AttemptedAxiomResults.AttemptedAxiomResults { results, remainders }) ->
-                                               "\n   Results: "
-                                               <> foldr (\a b -> unparseToString a <> " " <> b) "" results
-                                               <> "\n   Remainders: "
-                                               <> foldr (\a b -> unparseToString a <> " " <> b) "" remainders
-                                <> "\nFlattened: "
-                                    <> case flattened of
-                                           AttemptedAxiom.NotApplicable -> show flattened
-                                           AttemptedAxiom.Applied (AttemptedAxiomResults.AttemptedAxiomResults { results, remainders }) ->
-                                               "\n   Results: "
-                                               <> foldr (\a b -> unparseToString a <> " " <> b) "" results
-                                               <> "\n   Remainders: "
-                                               <> foldr (\a b -> unparseToString a <> " " <> b) "" remainders
-                                <> "\nMerged length: " <> show (length x)
-                                <> "\nMerged: " <> foldr (\a b -> unparseToString a <> " " <> b) "" x
-                                <> "\nSimplified: " <> show (isSimplified termLike)
-                            )
-                    _ -> return ()
+                -- case termLike of
+                --     App_ symbol _ -> do
+                --         let idSymb = Text.unpack . getId . symbolConstructor $ symbol
+                --         when ("parseByteStack" `isInfixOf` idSymb)
+                --             ( traceM
+                --                 $ "\nAxiomIdentifier: " <> show identifier
+                --                 <> "\nTermlike: " <> unparseToString termLike
+                --                 <> "\nResult: "
+                --                     <> case result of
+                --                            AttemptedAxiom.NotApplicable -> show result
+                --                            AttemptedAxiom.Applied (AttemptedAxiomResults.AttemptedAxiomResults { results, remainders }) ->
+                --                                "\n   Results: "
+                --                                <> foldr (\a b -> unparseToString a <> " " <> b) "" results
+                --                                <> "\n   Remainders: "
+                --                                <> foldr (\a b -> unparseToString a <> " " <> b) "" remainders
+                --                 <> "\nFlattened: "
+                --                     <> case flattened of
+                --                            AttemptedAxiom.NotApplicable -> show flattened
+                --                            AttemptedAxiom.Applied (AttemptedAxiomResults.AttemptedAxiomResults { results, remainders }) ->
+                --                                "\n   Results: "
+                --                                <> foldr (\a b -> unparseToString a <> " " <> b) "" results
+                --                                <> "\n   Remainders: "
+                --                                <> foldr (\a b -> unparseToString a <> " " <> b) "" remainders
+                --                 <> "\nMerged length: " <> show (length x)
+                --                 <> "\nMerged: " <> foldr (\a b -> unparseToString a <> " " <> b) "" x
+                --                 <> "\nSimplified: " <> show (isSimplified termLike)
+                --             )
+                --     _ -> return ()
                 return x
                 where
                 AttemptedAxiomResults { results, remainders } =
