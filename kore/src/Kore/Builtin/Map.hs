@@ -26,6 +26,9 @@ module Kore.Builtin.Map
     , evalUnit
     ) where
 
+-- import Debug.Trace
+-- import Kore.Unparser
+
 import Control.Applicative
     ( Alternative (..)
     )
@@ -280,6 +283,7 @@ evalElement =
                         _ -> Builtin.wrongArity Map.elementKey
             case TermLike.asConcrete _key of
                 Just concrete ->
+                    -- trace (unparseToString _key)
                     TermLike.assertNonSimplifiableKeys [_key]
                     $ returnConcreteMap
                         resultSort

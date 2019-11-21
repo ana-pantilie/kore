@@ -12,6 +12,15 @@ module Kore.Step.Function.Evaluator
     , evaluatePattern
     ) where
 
+import Control.Monad
+    ( when
+    )
+import Data.List
+    ( isInfixOf
+    )
+import qualified Data.Text as Text
+import Debug.Trace
+
 import Control.Error
     ( ExceptT
     , MaybeT (..)
@@ -242,8 +251,21 @@ maybeEvaluatePattern
         case merged of
             AttemptedAxiom.NotApplicable ->
                 return defaultValue
-            AttemptedAxiom.Applied attemptResults ->
-                return $ MultiOr.merge results remainders
+            AttemptedAxiom.Applied attemptResults -> do
+                let x = MultiOr.merge results remainders
+                case termLike of
+                    App_ symbol _ -> do
+                        let idSymb = Text.unpack . getId . symbolConstructor $ symbol
+                        when ("parseByteStack" `isInfixOf` idSymb)
+                            ( traceM
+                                $ "\nAxiomIdentifier: " <> show identifier
+                                <> "\nTermlike: " <> unparseToString termLike
+                                <> "\nResult length: " <> show (length x) <> "\n"
+                                <> "Results: " <> foldr (\a b -> unparseToString a <> " " <> b) "" x
+                                <> "\nSimplified: " <> show (isSimplified termLike)
+                            )
+                    _ -> return ()
+                return x
                 where
                 AttemptedAxiomResults { results, remainders } =
                     attemptResults
