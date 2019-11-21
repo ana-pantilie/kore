@@ -110,6 +110,11 @@ evaluateApplication
             configurationCondition
         & maybeT (return unevaluated) return
         & Trans.lift
+    let idSymb = Text.unpack . getId . symbolConstructor $ symbol
+    when ("parseByteStack" `isInfixOf` idSymb)
+        ( traceM
+        $ "Final result: " <> foldr (\a b -> unparseToString a <> " " <> b) "" results
+        )
     Foldable.for_ canMemoize (recordOrPattern results)
     return results
   where
@@ -233,6 +238,14 @@ maybeEvaluatePattern
                             identifier (length orResults)
                         $ mapM simplifyIfNeeded orResults
                     let simplifiedResult = MultiOr.flatten simplified
+                    case termLike of
+                        App_ symbol _ -> do
+                            let idSymb = Text.unpack . getId . symbolConstructor $ symbol
+                            when ("parseByteStack" `isInfixOf` idSymb)
+                                ( traceM
+                                    $ "\nResimplify result: " <> foldr (\a b -> unparseToString a <> " " <> b) "" simplifiedResult
+                                )
+                        _ -> return ()
                     Profile.axiomBranching
                         identifier
                         (length orResults)
@@ -258,8 +271,7 @@ maybeEvaluatePattern
                         let idSymb = Text.unpack . getId . symbolConstructor $ symbol
                         when ("parseByteStack" `isInfixOf` idSymb)
                             ( traceM
-                                $ "\nDefault value: " <> foldr (\a b -> unparseToString a <> " " <> b) "" defaultValue
-                                <> "\nAxiomIdentifier: " <> show identifier
+                                $ "\nAxiomIdentifier: " <> show identifier
                                 <> "\nTermlike: " <> unparseToString termLike
                                 <> "\nResult: "
                                     <> case result of
