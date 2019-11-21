@@ -258,10 +258,27 @@ maybeEvaluatePattern
                         let idSymb = Text.unpack . getId . symbolConstructor $ symbol
                         when ("parseByteStack" `isInfixOf` idSymb)
                             ( traceM
-                                $ "\nAxiomIdentifier: " <> show identifier
+                                $ "\nDefault value: " <> foldr (\a b -> unparseToString a <> " " <> b) "" defaultValue
+                                <> "\nAxiomIdentifier: " <> show identifier
                                 <> "\nTermlike: " <> unparseToString termLike
-                                <> "\nResult length: " <> show (length x) <> "\n"
-                                <> "Results: " <> foldr (\a b -> unparseToString a <> " " <> b) "" x
+                                <> "\nResult: "
+                                    <> case result of
+                                           AttemptedAxiom.NotApplicable -> show result
+                                           AttemptedAxiom.Applied (AttemptedAxiomResults.AttemptedAxiomResults { results, remainders }) ->
+                                               "\n   Results: "
+                                               <> foldr (\a b -> unparseToString a <> " " <> b) "" results
+                                               <> "\n   Remainders: "
+                                               <> foldr (\a b -> unparseToString a <> " " <> b) "" remainders
+                                <> "\nFlattened: "
+                                    <> case flattened of
+                                           AttemptedAxiom.NotApplicable -> show flattened
+                                           AttemptedAxiom.Applied (AttemptedAxiomResults.AttemptedAxiomResults { results, remainders }) ->
+                                               "\n   Results: "
+                                               <> foldr (\a b -> unparseToString a <> " " <> b) "" results
+                                               <> "\n   Remainders: "
+                                               <> foldr (\a b -> unparseToString a <> " " <> b) "" remainders
+                                <> "\nMerged length: " <> show (length x)
+                                <> "\nMerged: " <> foldr (\a b -> unparseToString a <> " " <> b) "" x
                                 <> "\nSimplified: " <> show (isSimplified termLike)
                             )
                     _ -> return ()
