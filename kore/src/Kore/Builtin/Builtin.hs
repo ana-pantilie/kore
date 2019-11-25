@@ -68,6 +68,7 @@ module Kore.Builtin.Builtin
     , makeDomainValuePattern
       -- * Implementing builtin unification
     , unifyEqualsUnsolved
+    , debugPrintKey
     ) where
 
 import Control.Applicative
@@ -201,6 +202,29 @@ import qualified Kore.Unification.Unify as Monad.Unify
     )
 import Kore.Unparser
 import qualified Kore.Verified as Verified
+
+
+import Data.List
+    ( isInfixOf
+    )
+import qualified Data.Text as Text
+import Debug.Trace
+import qualified Kore.Domain.Builtin as Domain
+import qualified Kore.Internal.Symbol as Symbol
+
+
+debugPrintKey :: TermLike variable -> String -> a -> a
+debugPrintKey key string' nextComp =
+    case key of
+        App_ symbol' [(TermLike.Builtin_ (Domain.BuiltinString str))] -> do
+            let idSymb = Text.unpack . TermLike.getId . Symbol.symbolConstructor $ symbol'
+            -- if (Domain.internalStringValue str == "do" && isInfixOf "parseByteStack" idSymb)
+            --     then trace string' nextComp
+            --     else nextComp
+            trace "debuggomg the debugah" nextComp
+        _ ->
+            trace string' nextComp
+
 
 -- TODO (thomas.tuegel): Split up verifiers and evaluators.
 

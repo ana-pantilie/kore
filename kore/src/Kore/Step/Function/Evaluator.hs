@@ -12,15 +12,15 @@ module Kore.Step.Function.Evaluator
     , evaluatePattern
     ) where
 
-import Control.Monad
-    ( when
-    )
-import Data.List
-    ( isInfixOf
-    )
-import qualified Data.Text as Text
-import Debug.Trace
-import qualified Kore.Domain.Builtin as Domain
+-- import Control.Monad
+--     ( when
+--     )
+-- import Data.List
+--     ( isInfixOf
+--     )
+-- import qualified Data.Text as Text
+-- import Debug.Trace
+-- import qualified Kore.Domain.Builtin as Domain
 
 import Control.Error
     ( ExceptT
@@ -111,23 +111,23 @@ evaluateApplication
             configurationCondition
         & maybeT (return unevaluated) return
         & Trans.lift
-    let idSymb = Text.unpack . getId . symbolConstructor $ symbol
-    if ("parseByteStack" `isInfixOf` idSymb)
-        then
-            case children of
-                [termDebug] ->
-                    case termDebug of
-                        (Builtin_ (Domain.BuiltinString str)) ->
-                            when (Domain.internalStringValue str == "do")
-                              $ traceM
-                                  $ "\nTerm to be evaluated: "
-                                  <> unparseToString termLike
-                                  <> "\nFinal result: "
-                                  <> foldr (\a b -> unparseToString a <> " " <> b) "" results
-                                  <> "\nLength: " <> show (length results)
-                        _ -> return ()
-                _ -> return ()
-        else return ()
+    -- let idSymb = Text.unpack . getId . symbolConstructor $ symbol
+    -- if ("parseByteStack" `isInfixOf` idSymb)
+    --     then
+    --         case children of
+    --             [termDebug] ->
+    --                 case termDebug of
+    --                     (Builtin_ (Domain.BuiltinString str)) ->
+    --                         when (Domain.internalStringValue str == "do")
+    --                           $ traceM
+    --                               $ "\nTerm to be evaluated: "
+    --                               <> unparseToString termLike
+    --                               <> "\nFinal result: "
+    --                               <> foldr (\a b -> unparseToString a <> " " <> b) "" results
+    --                               <> "\nLength: " <> show (length results)
+    --                     _ -> return ()
+    --             _ -> return ()
+    --     else return ()
     Foldable.for_ canMemoize (recordOrPattern results)
     return results
   where

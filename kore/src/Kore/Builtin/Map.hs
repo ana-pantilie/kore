@@ -26,8 +26,8 @@ module Kore.Builtin.Map
     , evalUnit
     ) where
 
--- import Debug.Trace
--- import Kore.Unparser
+import Debug.Trace
+import Kore.Unparser
 
 import Control.Applicative
     ( Alternative (..)
@@ -281,14 +281,17 @@ evalElement =
                     case arguments of
                         [_key, _value] -> (_key, _value)
                         _ -> Builtin.wrongArity Map.elementKey
-            case TermLike.asConcrete _key of
+            case Builtin.toKey _key of
                 Just concrete ->
                     -- trace (unparseToString _key)
                     TermLike.assertNonSimplifiableKeys [_key]
-                    $ returnConcreteMap
+                    $ Builtin.debugPrintKey concrete "evalElement: is concrete key" $
+                    trace (unparseToString concrete) $
+                    returnConcreteMap
                         resultSort
                         (Map.singleton concrete (Domain.MapValue _value))
                 Nothing ->
+                    Builtin.debugPrintKey _key "evalElement: is not concrete key" $
                     Ac.returnAc resultSort
                     $ Domain.wrapAc Domain.NormalizedAc
                         { elementsWithVariables =
@@ -343,7 +346,7 @@ evalUpdate =
             _key <- hoistMaybe $ Builtin.toKey _key
             _map <- expectConcreteBuiltinMap Map.updateKey _map
             TermLike.assertNonSimplifiableKeys (_key : Map.keys _map)
-                $ return ()
+                 $ return ()
             returnConcreteMap
                 resultSort
                 (Map.insert _key (Domain.MapValue value) _map)

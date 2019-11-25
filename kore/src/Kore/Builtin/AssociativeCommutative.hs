@@ -130,6 +130,12 @@ import Kore.Unparser
     )
 import qualified Kore.Unparser as Unparser
 
+
+import Debug.Trace
+import Unsafe.Coerce
+    ( unsafeCoerce
+    )
+
 {- | Class for things that can fill the @builtinAcChild@ value of a
 @InternalAc@ struct inside a @Domain.Builtin.Builtin@ value.
 -}
@@ -215,6 +221,8 @@ instance TermWrapper Domain.NormalizedMap where
         case args of
             [key, value]
               | Just key' <- Builtin.toKey key ->
+                Builtin.debugPrintKey key' "toNormalized: is key" $
+                trace (unparseToString key' <> "\n" <> unparseToString (coerceVariable value)) $
                 (Normalized . Domain.wrapAc) Domain.NormalizedAc
                     { elementsWithVariables = []
                     , concreteElements =
@@ -222,6 +230,8 @@ instance TermWrapper Domain.NormalizedMap where
                     , opaque = []
                     }
               | otherwise ->
+                Builtin.debugPrintKey key "toNormalized: is not key" $
+                trace (unparseToString (coerceVariable key) <> "\n" <> unparseToString (coerceVariable value)) $
                 (Normalized . Domain.wrapAc) Domain.NormalizedAc
                     { elementsWithVariables = [Domain.MapElement (key, value)]
                     , concreteElements = Map.empty
@@ -232,6 +242,9 @@ instance TermWrapper Domain.NormalizedMap where
         case args of
             [map1, map2] -> toNormalized map1 <> toNormalized map2
             _ -> Builtin.wrongArity "MAP.concat"
+      where
+        coerceVariable :: TermLike variable -> TermLike TermLike.Variable
+        coerceVariable = unsafeCoerce
     toNormalized patt =
         (Normalized . Domain.wrapAc) Domain.NormalizedAc
             { elementsWithVariables = []
@@ -424,7 +437,7 @@ updateConcreteElements
     -> Maybe (Map (TermLike Concrete) value)
 updateConcreteElements elems newElems =
     TermLike.assertNonSimplifiableKeys allKeys
-        $ Foldable.foldrM (uncurry insertMissing) elems newElems
+    $ Foldable.foldrM (uncurry insertMissing) elems newElems
       where
         allKeys = Map.keys elems <> fmap fst newElems
 
