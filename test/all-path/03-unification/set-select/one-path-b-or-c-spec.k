@@ -8,7 +8,7 @@ module ONE-PATH-B-OR-C-SPEC
   imports PATH
 
   rule <k> select => ?X </k>
-       <state> SetItem(b) SetItem(c) </state> 
-    ensures ?X ==K b orBool ?X ==K c [one-path]
+       <state> SetItem(b) SetItem(a) SetItem(c) </state> 
+    ensures ?X ==K a [one-path]
 
 endmodule

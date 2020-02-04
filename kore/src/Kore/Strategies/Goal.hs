@@ -896,6 +896,7 @@ deriveSeq
     -> goal
     -> Strategy.TransitionT (Rule goal) m (ProofState goal goal)
 deriveSeq rules goal = withConfiguration goal $ do
+    traceM "\n\nDERIVESEQ\n\n"
     let rewrites = RewriteRule . toRulePattern <$> rules
     eitherResults <-
         Trans.lift
@@ -914,7 +915,7 @@ deriveSeq rules goal = withConfiguration goal $ do
             ,   "We decided to end the execution because we don't \
                 \understand this case well enough at the moment."
             ]
-        Right results -> deriveResults goal results
+        Right results -> trace "\n\nsalut\n\n" $ deriveResults goal results
   where
     configuration = getConfiguration goal
 

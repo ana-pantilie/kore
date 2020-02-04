@@ -507,11 +507,13 @@ transitionRule applyPrim = transitionRule0
 
     -- Attempt both instructions, i.e. create a branch for each.
     transitionAnd instr1 instr2 config =
+        trace "\n\nAND\n\n" $
         transitionRule0 instr1 config <|> transitionRule0 instr2 config
 
     -- Attempt the first instruction. Fall back to the second if it is
     -- unsuccessful.
     transitionOr instr1 instr2 config = do
+        traceM "\n\nOR\n\n"
         results <- tryTransitionT (transitionRule0 instr1 config)
         case results of
             [] -> transitionRule0 instr2 config

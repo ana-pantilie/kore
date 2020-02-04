@@ -19,10 +19,6 @@ module Kore.Strategies.Verification
     , toRulePattern
     ) where
 
-import Data.Text.Prettyprint.Doc
-    ( Pretty (..)
-    )
-
 import Prelude.Kore
 
 import Control.Error
@@ -277,10 +273,6 @@ verifyClaim
         transitions <-
             Monad.Trans.lift . Monad.Trans.lift . runTransitionT
             $ transitionRule' goal destination prim proofState'
-        traceM
-            $ "\n\nMODIFTRANS\n\n"
-            <> show (length transitions)
-            <> "Prim:\n" <> show (pretty prim)
         Transition.scatter transitions
 
 -- | Attempts to perform a single proof step, starting at the configuration
@@ -339,7 +331,6 @@ transitionRule'
     -> CommonProofState
     -> TransitionT (Rule claim) m CommonProofState
 transitionRule' ruleType destination prim state = do
-    traceM "\n\nTRANSRULEPRIME\n\n"
     let goal = flip (configurationDestinationToRule ruleType) destination <$> state
     next <- transitionRule prim goal
     pure $ fmap getConfiguration next
