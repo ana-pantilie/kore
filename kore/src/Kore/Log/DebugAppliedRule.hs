@@ -12,6 +12,9 @@ module Kore.Log.DebugAppliedRule
     , filterDebugAppliedRule
     ) where
 
+import Kore.Attribute.Axiom
+    ( sourceLocation
+    )
 import Prelude.Kore
 
 import Data.Default
@@ -83,13 +86,15 @@ instance Pretty DebugAppliedRule where
         Pretty.vsep
             [ "Applied rule:"
             , (Pretty.indent 2 . Pretty.vsep)
-                [ (Pretty.indent 2 . Pretty.pretty) term
+                [ -- (Pretty.indent 2 . Pretty.pretty) term
+                (Pretty.indent 2 . Pretty.pretty) location
                 , "with condition:"
                 , (Pretty.indent 2 . unparse) condition
                 ]
             ]
       where
         (term, condition) = Conditional.splitTerm appliedRule
+        location = sourceLocation . Equality.attributes $ term
 
 instance SQL.Table DebugAppliedRule
 
