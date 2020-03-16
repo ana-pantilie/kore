@@ -161,6 +161,12 @@ import Kore.Variables.UnifiedVariable
 import qualified Kore.Verified as Verified
 import Log
     ( MonadLog (..)
+    , logDebug
+    )
+
+import qualified Data.Text as Text
+import Kore.Unparser
+    ( unparseToString
     )
 
 {- | The final nodes of an execution graph which were not proven.
@@ -803,12 +809,15 @@ removeDestination stateConstructor goal =
         if isTop removal
             then return . stateConstructor $ goal
             else do
+                logDebug ("DEBUGGING - removal" <> (Text.pack . unparseToString $ removal))
                 simplifiedRemoval <-
                     SMT.Evaluator.filterMultiOr
                     =<< simplifyTopConfiguration
                         (Conditional.andPredicate configuration removal)
                 if not (isBottom simplifiedRemoval)
-                    then return . GoalStuck $ goal
+                    then do
+                        logDebug (foldl (\a b -> a <> "\n\n" <> (Text.pack . unparseToString) b) "DEBUGGING - simplifiedRemoval" simplifiedRemoval)
+                        return . GoalStuck $ goal
                     else return Proven
   where
     configuration = getConfiguration goal
@@ -983,6 +992,7 @@ removalPredicate
     -- TODO (thomas.tuegel): Use unification here, not simplification.
     unifiedConfigs <-
         simplifyConditionalTermToOr sideCondition (mkAnd configTerm destTerm)
+    logDebug (foldl (\a b -> a <> "\n\n" <> (Text.pack . unparseToString) b) "DEBUGGING - unifiedConfigs" unifiedConfigs)
     case OrPattern.toPatterns unifiedConfigs of
         _ | OrPattern.isFalse unifiedConfigs ->
             return Predicate.makeTruePredicate_
@@ -993,9 +1003,17 @@ removalPredicate
                     Pattern.fromCondition
                     . Conditional.withoutTerm
                     $ (const <$> destination <*> substPattern)
+            logDebug
+                $ "DEBUGGING - remainderPattern"
+                <> Text.pack (unparseToString remainderPattern)
+            logDebug
+                $ "DEBUGGING - sideCondition"
+                <> Text.pack (unparseToString sideCondition)
+            logDebug (foldl (\a b -> a <> "\n\n" <> (Text.pack . unparseToString) b) "DEBUGGING - extraElemVariables" extraElemVariables)
             evaluatedRemainder <-
                 Exists.makeEvaluate
                     sideCondition extraElemVariables remainderPattern
+            logDebug (foldl (\a b -> a <> "\n\n" <> (Text.pack . unparseToString) b) "DEBUGGING - evaluatedRemainder" evaluatedRemainder)
             return
                 . Predicate.makeNotPredicate
                 . Condition.toPredicate

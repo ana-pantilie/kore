@@ -16,6 +16,14 @@ module Kore.Step.Simplification.Equals
 
 import Prelude.Kore
 
+import qualified Data.Text as Text
+import Kore.Log
+    ( logDebug
+    )
+import Kore.Unparser
+    ( unparseToString
+    )
+
 import Control.Error
     ( MaybeT (..)
     )
@@ -410,7 +418,10 @@ termEqualsAnd
     -> TermLike variable
     -> MaybeT (BranchT simplifier) (Pattern variable)
 termEqualsAnd p1 p2 =
-    MaybeT $ run $ maybeTermEqualsWorker p1 p2
+    MaybeT $ do
+        x <- run $ maybeTermEqualsWorker p1 p2
+        logDebug $ "DEBUGGING maybeTermEqualsWorker \n" <> Text.pack (maybe "Nothing" unparseToString x)
+        return x
   where
     run it = (runUnifierT . runMaybeT) it >>= either missingCase BranchT.scatter
     missingCase = const (return Nothing)
@@ -421,7 +432,8 @@ termEqualsAnd p1 p2 =
         => TermLike variable
         -> TermLike variable
         -> MaybeT unifier (Pattern variable)
-    maybeTermEqualsWorker = maybeTermEquals termEqualsAndWorker
+    maybeTermEqualsWorker =
+        maybeTermEquals termEqualsAndWorker
 
     termEqualsAndWorker
         :: forall unifier

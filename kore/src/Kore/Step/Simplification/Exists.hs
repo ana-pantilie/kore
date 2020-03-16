@@ -12,6 +12,10 @@ module Kore.Step.Simplification.Exists
     , makeEvaluate
     ) where
 
+import qualified Data.Text as Text
+import Kore.Log
+    ( logDebug
+    )
 import Prelude.Kore
 
 import Control.Monad
@@ -195,13 +199,15 @@ makeEvaluate sideCondition variables original = do
         normalized <- simplifyCondition sideCondition original'
         let Conditional { substitution = normalizedSubstitution } = normalized
         case splitSubstitution variable normalizedSubstitution of
-            (Left boundTerm, freeSubstitution) ->
+            (Left boundTerm, freeSubstitution) -> do
+                logDebug "DEBUGGING - boundTerm"
                 makeEvaluateBoundLeft
                     sideCondition
                     variable
                     boundTerm
                     normalized { Conditional.substitution = freeSubstitution }
             (Right boundSubstitution, freeSubstitution) -> do
+                logDebug "DEBUGGING - boundSubstitution"
                 matched <- lift $ matchesToVariableSubstitution
                     variable
                     normalized { Conditional.substitution = boundSubstitution }
@@ -252,6 +258,7 @@ matchesToVariableSubstitution
   , Substitution.null boundSubstitution
   , not (TermLike.hasFreeVariable (ElemVar variable) term)
   = do
+    logDebug "DEBUGGING - matchesToVariableSubstitution"
     matchResult <- matchIncremental first second
     case matchResult of
         Nothing -> return False
@@ -347,6 +354,7 @@ makeEvaluateBoundRight sideCondition variable freeSubstitution normalized = do
             ]
         )
     predicate <- Branch.scatter orCondition
+    logDebug $ "DEBUGGING - makeEvaluateBoundRight predicate" <> Text.pack (unparseToString predicate)
     let simplifiedPattern = quantifyTerm `Conditional.withCondition` predicate
     TopBottom.guardAgainstBottom simplifiedPattern
     return simplifiedPattern

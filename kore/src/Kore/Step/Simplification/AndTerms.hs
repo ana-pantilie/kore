@@ -420,7 +420,7 @@ variableFunctionAndEquals
     (ElemVar_ v1)
     second@(ElemVar_ _)
   =
-      return $ Pattern.assign (ElemVar v1) second
+    return $ Pattern.assign (ElemVar v1) second
 variableFunctionAndEquals
     sideCondition
     simplificationType
