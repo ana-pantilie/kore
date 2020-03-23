@@ -60,6 +60,7 @@ import Kore.TopBottom
     )
 import Kore.Unparser
     ( unparse
+    , unparseToString
     )
 
 {-|Describes whether simplifiers are allowed to return multiple results or not.
@@ -88,11 +89,21 @@ definitionEvaluation rules =
             Applied AttemptedAxiomResults { results, remainders }
               | length results == 1, null remainders ->
                 return attempted
-              | otherwise ->
+              | otherwise -> trace (printRes rules term condition results remainders) $
                 return
                 $ NotApplicableUntilConditionChanges
                 $ SideCondition.toRepresentation condition
             _ -> return NotApplicable
+  where
+    printRes rules term condition results remainders =
+        "\n\nRules:\n"
+        <> foldl (\x y -> x <> "\n" <> unparseToString y) "" rules
+        <> "\n\nTerm:\n" <> unparseToString term
+        <> "\n\nCondition:\n" <> unparseToString condition
+        <> "\n\nResults:\n"
+        <> foldl (\x y -> x <> "\n" <> unparseToString y) "" results
+        <> "\n\nRemainders:\n"
+        <> foldl (\x y -> x <> "\n" <> unparseToString y) "" remainders
 
 -- | Create an evaluator from a single simplification rule.
 simplificationEvaluation
