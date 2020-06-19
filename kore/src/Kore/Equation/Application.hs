@@ -19,6 +19,9 @@ module Kore.Equation.Application
     , debugApplyEquation
     ) where
 
+import Kore.Unparser
+    ( unparseToString
+    )
 import Prelude.Kore
 
 import Control.Error
@@ -165,6 +168,10 @@ attemptEquation sideCondition termLike equation =
             case argument of
                 Nothing -> do
                     matchResult <- match left termLike & whileMatch
+                    traceM
+                        $ "\n\nEquation:\n" <> unparseToString (from @_ @(TermLike (Target variable)) equationRenamed)
+                        <> "\n\nPredicate:\n" <> unparseToString (fst matchResult)
+                        <> "\n\nSubstitution:\n" <> unparseToString (Substitution.toPredicate . from @(Map.Map (SomeVariableName (Target variable)) (TermLike (Target variable))) @(Substitution (Target variable)) . snd $ matchResult)
                     applyMatchResult equationRenamed matchResult
                         & whileApplyMatchResult
                 Just argument' -> do
